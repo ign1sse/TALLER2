@@ -9,9 +9,8 @@
 using namespace std;
 
 // Constantes para representar el tablero
-const int FILAS = 6;
-const int COLUMNAS = 7;
-const int NUM_CONEXIONES = 4; // Numero de conexiones para ganar
+const int FILAS = 3;
+const int COLUMNAS = 3;
 const char VACIO = ' ';
 const char ROJO = 'X';
 const char AMARILLO = 'O';
@@ -106,68 +105,32 @@ int comprobarGanador(vector<vector<char>> tablero) {
     int ganador = 0;
     // Comprobamos si hay un ganador en las filas
     for (int i = 0; i < FILAS; i++) {
-        for (int j = 0; j < COLUMNAS - NUM_CONEXIONES + 1; j++) {
-            // Variable para contar el número de fichas consecutivas del mismo color
-            int contador = 0;
-            // Comparamos la ficha actual con las siguientes NUM_CONEXIONES - 1 fichas
-            for (int k = 0; k < NUM_CONEXIONES - 1; k++) {
-                if (tablero[i][j] != VACIO && tablero[i][j] == tablero[i][j + k + 1]) {
-                    contador++;
-                }
-            }
-            // Si el contador es igual a NUM_CONEXIONES - 1, significa que hay NUM_CONEXIONES fichas consecutivas del mismo color
-            if (contador == NUM_CONEXIONES - 1) {
+        for (int j = 0; j < COLUMNAS - 3; j++) {
+            if (tablero[i][j] != VACIO && tablero[i][j] == tablero[i][j + 1] && tablero[i][j] == tablero[i][j + 2] && tablero[i][j] == tablero[i][j + 3]) {
                 ganador = (tablero[i][j] == ROJO) ? 1 : 2;
             }
         }
     }
     // Comprobamos si hay un ganador en las columnas
-    for (int i = 0; i < FILAS - NUM_CONEXIONES + 1; i++) {
+    for (int i = 0; i < FILAS - 3; i++) {
         for (int j = 0; j < COLUMNAS; j++) {
-            // Variable para contar el número de fichas consecutivas del mismo color
-            int contador = 0;
-            // Comparamos la ficha actual con las siguientes NUM_CONEXIONES - 1 fichas
-            for (int k = 0; k < NUM_CONEXIONES - 1; k++) {
-                if (tablero[i][j] != VACIO && tablero[i][j] == tablero[i + k + 1][j]) {
-                    contador++;
-                }
-            }
-            // Si el contador es igual a NUM_CONEXIONES - 1, significa que hay NUM_CONEXIONES fichas consecutivas del mismo color
-            if (contador == NUM_CONEXIONES - 1) {
+            if (tablero[i][j] != VACIO && tablero[i][j] == tablero[i + 1][j] && tablero[i][j] == tablero[i + 2][j] && tablero[i][j] == tablero[i + 3][j]) {
                 ganador = (tablero[i][j] == ROJO) ? 1 : 2;
             }
         }
     }
     // Comprobamos si hay un ganador en las diagonales (de izquierda a derecha)
-    for (int i = 0; i < FILAS - NUM_CONEXIONES + 1; i++) {
-        for (int j = 0; j < COLUMNAS - NUM_CONEXIONES + 1; j++) {
-            // Variable para contar el número de fichas consecutivas del mismo color
-            int contador = 0;
-            // Comparamos la ficha actual con las siguientes NUM_CONEXIONES - 1 fichas
-            for (int k = 0; k < NUM_CONEXIONES - 1; k++) {
-                if (tablero[i][j] != VACIO && tablero[i][j] == tablero[i + k + 1][j + k + 1]) {
-                    contador++;
-                }
-            }
-            // Si el contador es igual a NUM_CONEXIONES - 1, significa que hay NUM_CONEXIONES fichas consecutivas del mismo color
-            if (contador == NUM_CONEXIONES - 1) {
+    for (int i = 0; i < FILAS - 3; i++) {
+        for (int j = 0; j < COLUMNAS - 3; j++) {
+            if (tablero[i][j] != VACIO && tablero[i][j] == tablero[i + 1][j + 1] && tablero[i][j] == tablero[i + 2][j + 2] && tablero[i][j] == tablero[i + 3][j + 3]) {
                 ganador = (tablero[i][j] == ROJO) ? 1 : 2;
             }
         }
     }
     // Comprobamos si hay un ganador en las diagonales (de derecha a izquierda)
-    for (int i = 0; i < FILAS - NUM_CONEXIONES + 1; i++) {
-        for (int j = NUM_CONEXIONES - 1; j < COLUMNAS; j++) {
-            // Variable para contar el número de fichas consecutivas del mismo color
-            int contador = 0;
-            // Comparamos la ficha actual con las siguientes NUM_CONEXIONES - 1 fichas
-            for (int k = 0; k < NUM_CONEXIONES - 1; k++) {
-                if (tablero[i][j] != VACIO && tablero[i][j] == tablero[i + k + 1][j - k - 1]) {
-                    contador++;
-                }
-            }
-            // Si el contador es igual a NUM_CONEXIONES - 1, significa que hay NUM_CONEXIONES fichas consecutivas del mismo color
-            if (contador == NUM_CONEXIONES - 1) {
+    for (int i = 0; i < FILAS - 3; i++) {
+        for (int j = 3; j < COLUMNAS; j++) {
+            if (tablero[i][j] != VACIO && tablero[i][j] == tablero[i + 1][j - 1] && tablero[i][j] == tablero[i + 2][j - 2] && tablero[i][j] == tablero[i + 3][j - 3]) {
                 ganador = (tablero[i][j] == ROJO) ? 1 : 2;
             }
         }
