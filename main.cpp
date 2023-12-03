@@ -15,6 +15,8 @@ const int NUM_CONEXIONES = 4; // Numero de conexiones para ganar
 const char VACIO = ' ';
 const char ROJO = 'X';
 const char AMARILLO = 'O';
+const bool PODA = true; // Si es true, se utilizará el algoritmo minimax con poda alfa-beta
+const int MAX_DEPTH = 10; // Profundidad máxima para el algoritmo minimax (Recomendado: 10)
 
 // Crear un objeto de tipo random_device para obtener un valor aleatorio de la fuente de entropía del sistema
 random_device rd;
@@ -249,6 +251,163 @@ int minimax(vector<vector<char>> tablero, int profundidad, bool turnoMaquina) {
     }
 }
 
+// Función minimax con poda alfa-beta para calcular el movimiento de la máquina
+int minimaxAB(vector<vector<char>> tablero, int profundidad, bool turnoMaquina, int alfa, int beta) {
+    // Comprobamos si hay un ganador
+    int ganador = comprobarGanador(tablero);
+    // Si el jugador ha ganado, devolvemos -10
+    if (ganador == 1) {
+        return -10;
+    // Si la máquina ha ganado, devolvemos 10
+    } else if (ganador == 2) {
+        return 10;
+    // Si hay un empate, devolvemos 0
+    } else if (ganador == 3) {
+        return 0;
+    }
+    // Si se llega a la profundidad máxima, devolvemos 0
+    if (profundidad == MAX_DEPTH) {
+        return 0;
+    }
+    // Si no hay ganador, calculamos el valor de la función minimax
+    if (turnoMaquina) {
+        // Variable para saber el mejor valor
+        int mejorValor = -1000;
+        // Recorremos las columnas
+        for (int i = 0; i < COLUMNAS; i++) {
+            // Si el movimiento es válido
+            if (movimientoValido(tablero, i)) {
+                // Insertamos la ficha en el tablero
+                insertarFicha(tablero, i, AMARILLO);
+                // Calculamos el valor de la función minimax
+                int valor = minimaxAB(tablero, profundidad + 1, false, alfa, beta);
+                // Deshacemos el movimiento
+                deshacerMovimiento(tablero, i);
+                // Si el valor es mayor que el mejor valor
+                if (valor > mejorValor) {
+                    // Actualizamos el mejor valor
+                    mejorValor = valor;
+                }
+                // Si el valor es mayor que alfa
+                if (valor > alfa) {
+                    // Actualizamos alfa
+                    alfa = valor;
+                }
+                // Si alfa es mayor o igual que beta
+                if (alfa >= beta) {
+                    // Podamos la rama
+                    break;
+                }
+            }
+        }
+        // Devolvemos el mejor valor
+        return mejorValor;
+    } else {
+        // Variable para saber el mejor valor
+        int mejorValor = 1000;
+        // Recorremos las columnas
+        for (int i = 0; i < COLUMNAS; i++) {
+            // Si el movimiento es válido
+            if (movimientoValido(tablero, i)) {
+                // Insertamos la ficha en el tablero
+                insertarFicha(tablero, i, ROJO);
+                // Calculamos el valor de la función minimax
+                int valor = minimaxAB(tablero, profundidad + 1, true, alfa, beta);
+                // Deshacemos el movimiento
+                deshacerMovimiento(tablero, i);
+                // Si el valor es menor que el mejor valor
+                if (valor < mejorValor) {
+                    // Actualizamos el mejor valor
+                    mejorValor = valor;
+                }
+                // Si el valor es menor que beta
+                if (valor < beta) {
+                    // Actualizamos beta
+                    beta = valor;
+                }
+                // Si alfa es mayor o igual que beta
+                if (alfa >= beta) {
+                    // Podamos la rama
+                    break;
+                }
+            }
+        }
+        // Devolvemos el mejor valor
+        return mejorValor;
+    }
+}
+
+// Función para predecir la victoria de algún jugador
+// para ello se analiza el tablero y se comprueba si hay 3 fichas consecutivas
+// del mismo color en una fila, columna o diagonal y además la siguiente
+// casilla está vacía. Si es así, se devuelve la columna de la casilla vacía.
+// Si no, se devuelve -1.
+int predecirVictoria(vector<vector<char>> tablero) {
+    // Recorremos el tablero por filas, columnas y diagonales
+    for (int i = 0; i < FILAS; i++) {
+        for (int j = 0; j < COLUMNAS; j++) {
+            // Comprobamos si hay 3 fichas consecutivas del mismo color
+            // en la fila i
+            if (j + NUM_CONEXIONES - 1 < COLUMNAS) {
+                char color = tablero[i][j];
+                if (color != VACIO && tablero[i][j+1] == color && tablero[i][j+2] == color) {
+                    // Si la siguiente casilla está vacía, devolvemos la columna
+                    if (j + NUM_CONEXIONES < COLUMNAS && tablero[i][j+3] == VACIO) {
+                        return j + 3;
+                    }
+                    // Si la casilla anterior está vacía, devolvemos la columna
+                    if (j - 1 >= 0 && tablero[i][j-1] == VACIO) {
+                        return j - 1;
+                    }
+                }
+            }
+            // Comprobamos si hay 3 fichas consecutivas del mismo color
+            // en la columna j
+            if (i + NUM_CONEXIONES - 1 < FILAS) {
+                char color = tablero[i][j];
+                if (color != VACIO && tablero[i+1][j] == color && tablero[i+2][j] == color) {
+                    // Si la siguiente casilla está vacía, devolvemos la columna
+                    if (i + NUM_CONEXIONES < FILAS && tablero[i+3][j] == VACIO) {
+                        return j;
+                    }
+                }
+            }
+            // Comprobamos si hay 3 fichas consecutivas del mismo color
+            // en la diagonal ascendente que pasa por (i,j)
+            if (i + NUM_CONEXIONES - 1 < FILAS && j + NUM_CONEXIONES - 1 < COLUMNAS) {
+                char color = tablero[i][j];
+                if (color != VACIO && tablero[i+1][j+1] == color && tablero[i+2][j+2] == color) {
+                    // Si la siguiente casilla está vacía, devolvemos la columna
+                    if (i + NUM_CONEXIONES < FILAS && j + NUM_CONEXIONES < COLUMNAS && tablero[i+3][j+3] == VACIO) {
+                        return j + 3;
+                    }
+                    // Si la casilla anterior está vacía, devolvemos la columna
+                    if (i - 1 >= 0 && j - 1 >= 0 && tablero[i-1][j-1] == VACIO) {
+                        return j - 1;
+                    }
+                }
+            }
+            // Comprobamos si hay 3 fichas consecutivas del mismo color
+            // en la diagonal descendente que pasa por (i,j)
+            if (i - NUM_CONEXIONES + 1 >= 0 && j + NUM_CONEXIONES - 1 < COLUMNAS) {
+                char color = tablero[i][j];
+                if (color != VACIO && tablero[i-1][j+1] == color && tablero[i-2][j+2] == color) {
+                    // Si la siguiente casilla está vacía, devolvemos la columna
+                    if (i - NUM_CONEXIONES >= 0 && j + NUM_CONEXIONES < COLUMNAS && tablero[i-3][j+3] == VACIO) {
+                        return j + 3;
+                    }
+                    // Si la casilla anterior está vacía, devolvemos la columna
+                    if (i + 1 < FILAS && j - 1 >= 0 && tablero[i+1][j-1] == VACIO) {
+                        return j - 1;
+                    }
+                }
+            }
+        }
+    }
+    // Si ningún jugador puede ganar, devolvemos -1
+    return -1;
+}
+
 // Función para calcular el movimiento de la máquina
 int calcularMovimiento(vector<vector<char>> tablero, int dificultad) {
     // Variable para saber en qué columna insertar la ficha
@@ -259,29 +418,68 @@ int calcularMovimiento(vector<vector<char>> tablero, int dificultad) {
             // Obtenemos un número aleatorio entre 0 y COLUMNAS - 1
             columna = dist(mt);
         } while (!movimientoValido(tablero, columna));
-    // Si la dificultad es 2 la maquina hará un movimiento inteligente (si puede ganar, ganará; si no, evitará que el usuario gane)
+    // Si la dificultad es 2 la maquina hará un movimiento aleatorio pero a veces inteligente (si puede ganar, ganará; si no, evitará que el usuario gane)
     } else if (dificultad == 2) {
-        // Ignorar
+        // Primero comprobamos si algún jugador puede ganar
+        columna = predecirVictoria(tablero);
+        if (columna == -1) {
+            do {
+                // Obtenemos un número aleatorio entre 0 y COLUMNAS - 1
+                columna = dist(mt);
+            } while (!movimientoValido(tablero, columna));
+        }
     // Si la dificultad es 3 la maquina hará un movimiento utilizando el algoritmo minimax
     } else if (dificultad == 3) {
-        // Variable para saber el mejor valor
-        int mejorValor = -1000;
-        // Recorremos las columnas
-        for (int i = 0; i < COLUMNAS; i++) {
-            // Si el movimiento es válido
-            if (movimientoValido(tablero, i)) {
-                // Insertamos la ficha en el tablero
-                insertarFicha(tablero, i, AMARILLO);
-                // Calculamos el valor de la función minimax
-                int valor = minimax(tablero, 0, false);
-                // Deshacemos el movimiento
-                deshacerMovimiento(tablero, i);
-                // Si el valor es mayor que el mejor valor
-                if (valor > mejorValor) {
-                    // Actualizamos el mejor valor
-                    mejorValor = valor;
-                    // Actualizamos la columna
-                    columna = i;
+        if (PODA) {
+            // Variable para saber el mejor valor
+            int mejorValor = -1000;
+            // Inicializamos alfa y beta
+            int alfa = -1000;
+            int beta = 1000;
+            // Recorremos las columnas
+            for (int i = 0; i < COLUMNAS; i++) {
+                // Si el movimiento es válido
+                if (movimientoValido(tablero, i)) {
+                    // Insertamos la ficha en el tablero
+                    insertarFicha(tablero, i, AMARILLO);
+                    // Calculamos el valor de la función minimax
+                    int valor = minimaxAB(tablero, 0, false, alfa, beta);
+                    // Deshacemos el movimiento
+                    deshacerMovimiento(tablero, i);
+                    // Si el valor es mayor que el mejor valor
+                    if (valor > mejorValor) {
+                        // Actualizamos el mejor valor
+                        mejorValor = valor;
+                        // Actualizamos la columna
+                        columna = i;
+                    }
+                    // Si el valor es mayor que alfa
+                    if (valor > alfa) {
+                        // Actualizamos alfa
+                        alfa = valor;
+                    }
+                }
+            }
+        } else {
+            // Variable para saber el mejor valor
+            int mejorValor = -1000;
+            // Recorremos las columnas
+            for (int i = 0; i < COLUMNAS; i++) {
+                // Si el movimiento es válido
+                if (movimientoValido(tablero, i)) {
+                    // Insertamos la ficha en el tablero
+                    insertarFicha(tablero, i, AMARILLO);
+                    // Calculamos el valor de la función minimax
+                    int valor = minimax(tablero, 0, false);
+                    // Deshacemos el movimiento
+                    deshacerMovimiento(tablero, i);
+                    // Si el valor es mayor que el mejor valor
+                    if (valor > mejorValor) {
+                        // Actualizamos el mejor valor
+                        mejorValor = valor;
+                        // Actualizamos la columna
+                        columna = i;
+                    }
                 }
             }
         }
