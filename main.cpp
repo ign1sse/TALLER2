@@ -337,70 +337,36 @@ int minimaxAB(vector<vector<char>> tablero, int profundidad, bool turnoMaquina, 
     }
 }
 
-// Función para predecir la victoria de algún jugador
-// para ello se analiza el tablero y se comprueba si hay 3 fichas consecutivas
-// del mismo color en una fila, columna o diagonal y además la siguiente
-// casilla está vacía. Si es así, se devuelve la columna de la casilla vacía.
-// Si no, se devuelve -1.
+// Función para predecir la victoria de algún jugador.
+// Para ello se intenta colocar una ficha en cada casilla vacía
+// y se comprueba si algún jugador gana.
+// Si algún jugador puede ganar, devolvemos la columna en la que se puede
+// insertar la ficha.
+// Si ningún jugador puede ganar, devolvemos -1
 int predecirVictoria(vector<vector<char>> tablero) {
-    // Recorremos el tablero por filas, columnas y diagonales
-    for (int i = 0; i < FILAS; i++) {
-        for (int j = 0; j < COLUMNAS; j++) {
-            // Comprobamos si hay 3 fichas consecutivas del mismo color
-            // en la fila i
-            if (j + NUM_CONEXIONES - 1 < COLUMNAS) {
-                char color = tablero[i][j];
-                if (color != VACIO && tablero[i][j+1] == color && tablero[i][j+2] == color) {
-                    // Si la siguiente casilla está vacía, devolvemos la columna
-                    if (j + NUM_CONEXIONES < COLUMNAS && tablero[i][j+3] == VACIO) {
-                        return j + 3;
-                    }
-                    // Si la casilla anterior está vacía, devolvemos la columna
-                    if (j - 1 >= 0 && tablero[i][j-1] == VACIO) {
-                        return j - 1;
-                    }
-                }
+    // Recorremos las columnas
+    for (int i = 0; i < COLUMNAS; i++) {
+        // Si el movimiento es válido
+        if (movimientoValido(tablero, i)) {
+            // Insertamos la ficha en el tablero
+            insertarFicha(tablero, i, AMARILLO);
+            // Comprobamos si algún jugador puede ganar
+            int ganador = comprobarGanador(tablero);
+            // Deshacemos el movimiento
+            deshacerMovimiento(tablero, i);
+            // Si algún jugador puede ganar, devolvemos la columna
+            if (ganador == 2) {
+                return i;
             }
-            // Comprobamos si hay 3 fichas consecutivas del mismo color
-            // en la columna j
-            if (i + NUM_CONEXIONES - 1 < FILAS) {
-                char color = tablero[i][j];
-                if (color != VACIO && tablero[i+1][j] == color && tablero[i+2][j] == color) {
-                    // Si la siguiente casilla está vacía, devolvemos la columna
-                    if (i + NUM_CONEXIONES < FILAS && tablero[i+3][j] == VACIO) {
-                        return j;
-                    }
-                }
-            }
-            // Comprobamos si hay 3 fichas consecutivas del mismo color
-            // en la diagonal ascendente que pasa por (i,j)
-            if (i + NUM_CONEXIONES - 1 < FILAS && j + NUM_CONEXIONES - 1 < COLUMNAS) {
-                char color = tablero[i][j];
-                if (color != VACIO && tablero[i+1][j+1] == color && tablero[i+2][j+2] == color) {
-                    // Si la siguiente casilla está vacía, devolvemos la columna
-                    if (i + NUM_CONEXIONES < FILAS && j + NUM_CONEXIONES < COLUMNAS && tablero[i+3][j+3] == VACIO) {
-                        return j + 3;
-                    }
-                    // Si la casilla anterior está vacía, devolvemos la columna
-                    if (i - 1 >= 0 && j - 1 >= 0 && tablero[i-1][j-1] == VACIO) {
-                        return j - 1;
-                    }
-                }
-            }
-            // Comprobamos si hay 3 fichas consecutivas del mismo color
-            // en la diagonal descendente que pasa por (i,j)
-            if (i - NUM_CONEXIONES + 1 >= 0 && j + NUM_CONEXIONES - 1 < COLUMNAS) {
-                char color = tablero[i][j];
-                if (color != VACIO && tablero[i-1][j+1] == color && tablero[i-2][j+2] == color) {
-                    // Si la siguiente casilla está vacía, devolvemos la columna
-                    if (i - NUM_CONEXIONES >= 0 && j + NUM_CONEXIONES < COLUMNAS && tablero[i-3][j+3] == VACIO) {
-                        return j + 3;
-                    }
-                    // Si la casilla anterior está vacía, devolvemos la columna
-                    if (i + 1 < FILAS && j - 1 >= 0 && tablero[i+1][j-1] == VACIO) {
-                        return j - 1;
-                    }
-                }
+            // Insertamos la ficha en el tablero
+            insertarFicha(tablero, i, ROJO);
+            // Comprobamos si algún jugador puede ganar
+            ganador = comprobarGanador(tablero);
+            // Deshacemos el movimiento
+            deshacerMovimiento(tablero, i);
+            // Si algún jugador puede ganar, devolvemos la columna
+            if (ganador == 1) {
+                return i;
             }
         }
     }
